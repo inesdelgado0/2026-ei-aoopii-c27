@@ -1,0 +1,52 @@
+# Step 3: fixed target attributes (50)
+# One attribute name per line, exactly as in DeepFashion list_attr_cloth.txt
+print
+printed
+graphic
+abstract
+floral
+floral print
+striped
+stripe
+plaid
+polka dot
+paisley
+tribal
+lace
+mesh
+sheer
+crochet
+knit
+woven
+cotton
+denim
+leather
+faux leather
+linen
+chiffon
+sleeve
+sleeveless
+long sleeve
+v-neck
+crew neck
+collar
+shirt
+hooded
+crop
+mini
+midi
+maxi
+bodycon
+skater
+shift
+a-line
+flare
+strapless
+button
+pocket
+drawstring
+pleated
+embroidered
+wash
+red
+pink

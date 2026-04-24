@@ -1,0 +1,7 @@
+.venv/
+__pycache__/
+*.pyc
+
+# DeepFashion raw/derived data
+data/*
+!data/selected_attributes.txt
