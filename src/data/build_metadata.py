@@ -184,7 +184,7 @@ def build_metadata(
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Build metadata.csv from DeepFashion annotations.")
-    parser.add_argument("--data-root", type=Path, default=Path("data"))
+    parser.add_argument("--data-root", type=Path, default=Path("data/deepfashion"))
     parser.add_argument("--anno-dir", type=Path, default=None)
     parser.add_argument("--eval-file", type=Path, default=None)
     parser.add_argument("--output", type=Path, default=Path("data/metadata.csv"))
@@ -206,8 +206,8 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
 
-    anno_dir = args.anno_dir or find_one("data/Anno_coarse*/Anno_coarse")
-    eval_file = args.eval_file or find_one("data/Eval*/Eval/list_eval_partition.txt")
+    anno_dir = args.anno_dir or find_one("data/deepfashion/Anno_coarse*/Anno_coarse")
+    eval_file = args.eval_file or find_one("data/deepfashion/Eval/list_eval_partition.txt")
     attr_img_file = anno_dir / "list_attr_img.txt"
     attr_cloth_file = anno_dir / "list_attr_cloth.txt"
 
