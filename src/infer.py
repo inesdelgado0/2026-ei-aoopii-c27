@@ -19,6 +19,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run inference with a trained garment attribute classifier.")
     parser.add_argument("--checkpoint", type=Path, default=Path("outputs/checkpoints/best_resnet50.pt"))
     parser.add_argument("--image", type=Path, required=True)
+    parser.add_argument("--data-root", type=Path, default=None)
     parser.add_argument("--image-size", type=int, default=None)
     parser.add_argument("--threshold", type=float, default=0.5)
     parser.add_argument("--top-k", type=int, default=10)
@@ -45,10 +46,13 @@ def load_checkpoint(path: Path, device: torch.device) -> dict:
 def predict(
     checkpoint_path: Path,
     image_path: Path,
+    data_root: Path | None,
     image_size: int | None,
     threshold: float,
     top_k: int,
 ) -> list[dict[str, float | str]]:
+    if data_root is not None and not image_path.exists():
+        image_path = data_root / image_path
     if not image_path.exists():
         raise FileNotFoundError(f"Image not found: {image_path}")
     if not 0 < threshold < 1:
@@ -98,6 +102,7 @@ def main() -> None:
     predictions = predict(
         checkpoint_path=args.checkpoint,
         image_path=args.image,
+        data_root=args.data_root,
         image_size=args.image_size,
         threshold=args.threshold,
         top_k=args.top_k,

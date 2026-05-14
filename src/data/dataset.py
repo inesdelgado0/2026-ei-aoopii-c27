@@ -41,15 +41,19 @@ class DeepFashionMultiLabelDataset(Dataset):
         metadata_csv: str | Path,
         split: str,
         transform: Callable | None = None,
+        data_root: str | Path | None = None,
         use_abs_path: bool = True,
     ) -> None:
         self.metadata_csv = Path(metadata_csv)
         self.split = split
         self.transform = transform
+        self.data_root = Path(data_root) if data_root is not None else None
         self.use_abs_path = use_abs_path
 
         if not self.metadata_csv.exists():
             raise FileNotFoundError(f"Metadata file not found: {self.metadata_csv}")
+        if self.data_root is not None and not self.data_root.exists():
+            raise FileNotFoundError(f"Data root not found: {self.data_root}")
 
         df = pd.read_csv(self.metadata_csv)
         df = df[df["split"] == split].reset_index(drop=True)
@@ -60,8 +64,13 @@ class DeepFashionMultiLabelDataset(Dataset):
         if not self.attr_columns:
             raise ValueError("No attribute columns found. Expected columns prefixed with 'attr_'.")
 
-        path_column = "abs_image_path" if use_abs_path and "abs_image_path" in df.columns else "image_path"
-        self.image_paths = df[path_column].astype(str).tolist()
+        if self.data_root is not None:
+            self.image_paths = [
+                str(self.data_root / image_path) for image_path in df["image_path"].astype(str)
+            ]
+        else:
+            path_column = "abs_image_path" if use_abs_path and "abs_image_path" in df.columns else "image_path"
+            self.image_paths = df[path_column].astype(str).tolist()
         self.labels = torch.tensor(df[self.attr_columns].values, dtype=torch.float32)
 
     def __len__(self) -> int:
@@ -82,6 +91,7 @@ def create_dataloader(
     batch_size: int = 32,
     image_size: int = 224,
     num_workers: int = 0,
+    data_root: str | Path | None = None,
     use_abs_path: bool = True,
 ) -> tuple[DataLoader, list[str]]:
     is_train = split == "train"
@@ -90,6 +100,7 @@ def create_dataloader(
         metadata_csv=metadata_csv,
         split=split,
         transform=transform,
+        data_root=data_root,
         use_abs_path=use_abs_path,
     )
     loader = DataLoader(

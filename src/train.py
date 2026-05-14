@@ -20,6 +20,7 @@ from src.models import create_resnet50_multilabel
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Train a ResNet-50 multi-label garment classifier.")
     parser.add_argument("--metadata", type=Path, default=Path("data/metadata.csv"))
+    parser.add_argument("--data-root", type=Path, default=None)
     parser.add_argument("--output-dir", type=Path, default=Path("outputs/checkpoints"))
     parser.add_argument("--epochs", type=int, default=5)
     parser.add_argument("--batch-size", type=int, default=32)
@@ -128,13 +129,17 @@ def save_checkpoint(
     args: argparse.Namespace,
 ) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
+    saved_args = {
+        key: str(value) if isinstance(value, Path) else value
+        for key, value in vars(args).items()
+    }
     torch.save(
         {
             "epoch": epoch,
             "model_state_dict": model.state_dict(),
             "attr_columns": attr_columns,
             "metrics": metrics,
-            "args": vars(args),
+            "args": saved_args,
         },
         path,
     )
@@ -156,6 +161,7 @@ def main() -> None:
         batch_size=args.batch_size,
         image_size=args.image_size,
         num_workers=args.num_workers,
+        data_root=args.data_root,
     )
     val_loader, val_attr_columns = create_dataloader(
         args.metadata,
@@ -163,6 +169,7 @@ def main() -> None:
         batch_size=args.batch_size,
         image_size=args.image_size,
         num_workers=args.num_workers,
+        data_root=args.data_root,
     )
     if attr_columns != val_attr_columns:
         raise ValueError("Train and validation attribute columns do not match.")

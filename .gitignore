@@ -2,6 +2,8 @@
 __pycache__/
 *.pyc
 outputs/
+kaggle_export/
+*.zip
 
 # DeepFashion raw/derived data
 data/*
