@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="pt">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Classificador de Atributos de Vestuário</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hero">
+        <div>
+          <h1>Classificação de atributos de vestuário</h1>
+          <p class="intro">
+            Análise automática de imagens de roupa com previsão multi-label de padrões,
+            materiais, cortes e detalhes visuais.
+          </p>
+        </div>
+        <div class="status-card">
+          <span class="status-dot {% if checkpoint_exists %}ready{% else %}missing{% endif %}"></span>
+          <div>
+            <strong>{% if checkpoint_exists %}Modelo carregado{% else %}Modelo em falta{% endif %}</strong>
+            <small>ResNet50 Multi-Label</small>
+          </div>
+        </div>
+      </section>
+
+      {% if error %}
+        <section class="alert">{{ error }}</section>
+      {% endif %}
+
+      <section class="workspace">
+        <form class="upload-panel" action="{{ url_for('predict_route') }}" method="post" enctype="multipart/form-data">
+          <div class="panel-heading">
+            <span>01</span>
+            <div>
+              <h2>Imagem</h2>
+              <p>Carrega uma fotografia da peça de roupa.</p>
+            </div>
+          </div>
+
+          <label class="dropzone" for="imageInput">
+            <input id="imageInput" name="image" type="file" accept="image/png,image/jpeg,image/webp">
+            <span class="drop-icon">+</span>
+            <strong>Selecionar imagem</strong>
+            <small>JPG, PNG ou WEBP até 8 MB</small>
+          </label>
+
+          <div class="preview-frame {% if image_preview %}has-image{% endif %}">
+            <button class="clear-image" id="clearImageButton" type="button" aria-label="Remover imagem">×</button>
+            {% if image_preview %}
+              <img id="livePreview" src="{{ image_preview }}" alt="Imagem analisada" class="visible">
+            {% else %}
+              <div id="previewPlaceholder">A pré-visualização aparece aqui.</div>
+              <img id="livePreview" alt="Pré-visualização da imagem">
+            {% endif %}
+          </div>
+
+          {% if file_info %}
+            <div class="file-info">
+              <div>
+                <span>Nome</span>
+                <strong>{{ file_info.name }}</strong>
+              </div>
+              <div>
+                <span>Resolução</span>
+                <strong>{{ file_info.resolution }}</strong>
+              </div>
+            </div>
+          {% endif %}
+
+          <div class="control-row">
+            <label for="thresholdInput">
+              Limite de confiança
+              <strong><span id="thresholdValue">{{ (threshold * 100)|round|int }}</span>%</strong>
+            </label>
+            <input
+              id="thresholdInput"
+              name="threshold"
+              type="range"
+              min="0.1"
+              max="0.9"
+              step="0.05"
+              value="{{ threshold }}"
+            >
+          </div>
+
+          <button class="primary-button" type="submit" {% if not checkpoint_exists %}disabled{% endif %}>
+            Analisar imagem
+          </button>
+        </form>
+
+        <section class="results-panel">
+          <div class="panel-heading">
+            <span>02</span>
+            <div>
+              <h2>Resultados</h2>
+              <p>Atributos previstos pelo modelo.</p>
+            </div>
+          </div>
+
+          {% if results %}
+            <div class="metrics">
+              <div>
+                <strong>{{ result_count }}</strong>
+                <span>atributos</span>
+              </div>
+              <div>
+                <strong>{{ elapsed_ms }} ms</strong>
+                <span>inferência</span>
+              </div>
+            </div>
+
+            <div class="top-grid">
+              {% for item in top_results %}
+                <article class="top-card">
+                  <small>Top {{ loop.index }}</small>
+                  <strong>{{ item.name }}</strong>
+                  <em class="confidence {{ item.confidence.class_name }}">{{ item.confidence.label }}</em>
+                  <span>{{ item.probability }}%</span>
+                </article>
+              {% endfor %}
+            </div>
+
+            <div class="result-list">
+              {% for item in results[:12] %}
+                <div class="result-row">
+                  <div>
+                    <strong>{{ item.name }}</strong>
+                    <span>{{ item.probability }}%</span>
+                  </div>
+                  <em class="confidence {{ item.confidence.class_name }}">{{ item.confidence.label }}</em>
+                  <div class="bar">
+                    <i style="width: {{ item.probability }}%"></i>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="empty-state">
+              <h2>Sem análise ainda</h2>
+              <p>Depois do upload, os atributos mais prováveis aparecem aqui organizados por confiança.</p>
+            </div>
+          {% endif %}
+        </section>
+      </section>
+    </main>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+  </body>
+</html>
